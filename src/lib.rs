@@ -8,7 +8,7 @@ use std::{
 
 const FILE_BASE: &str = "c:\\Users\\rubin\\rust\\aoc_2020\\";
 
-fn read_file(file_name: &str) -> Lines<BufReader<File>> {
+pub fn read_file(file_name: &str) -> Lines<BufReader<File>> {
     let input = File::open(FILE_BASE.to_owned() + file_name).unwrap();
     let reader = BufReader::new(input);
     reader.lines()

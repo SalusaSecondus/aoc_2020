@@ -3,7 +3,7 @@ use regex::Regex;
 
 use crate::*;
 
-struct PwPolicy {
+pub struct PwPolicy {
     min: usize,
     max: usize,
     target: char,
@@ -48,7 +48,7 @@ impl PwPolicy {
     }
 }
 
-fn load_data(file_name: &str) -> Vec<(PwPolicy, String)> {
+pub fn load_data(file_name: &str) -> Vec<(PwPolicy, String)> {
     let mut result = vec![];
     for line in read_file(file_name) {
         let line_s = line.unwrap();
@@ -62,7 +62,7 @@ fn load_data(file_name: &str) -> Vec<(PwPolicy, String)> {
 
 #[cfg(test)]
 mod tests {
-    use day2::{PwPolicy, load_data};
+    use day2::load_data;
 
     use crate::*;
 
