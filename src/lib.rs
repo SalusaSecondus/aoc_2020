@@ -11,8 +11,10 @@ use std::{
     io::{BufRead, BufReader, Lines},
 };
 
+const FILE_BASE: &str = r"res\";
+
 pub fn read_file(file_name: &str) -> Lines<BufReader<File>> {
-    let input = File::open(file_name).unwrap();
+    let input = File::open(FILE_BASE.to_owned() + file_name).unwrap();
     let reader = BufReader::new(input);
     reader.lines()
 }
