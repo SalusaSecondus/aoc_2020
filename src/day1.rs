@@ -1,6 +1,8 @@
 #[cfg(test)]
 mod tests {
     use std::collections::HashMap;
+    use anyhow::{anyhow, Result};
+
     use crate::*;
     #[test]
     fn it_works() {
@@ -8,10 +10,10 @@ mod tests {
     }
 
     #[test]
-    fn day_1_1() {
+    fn day_1_1() -> Result<()> {
         let mut entries = HashMap::new();
-        for line in read_file("day1.txt") {
-            let val: i32 = line.unwrap().parse().unwrap();
+        for line in read_file("day1.txt")? {
+            let val: i32 = line?.parse()?;
             entries.insert(val, 1 as i32);
         }
 
@@ -19,16 +21,18 @@ mod tests {
             let target = 2020 - k;
             if entries.contains_key(&target) {
                 println!("Day1.1: {}", k * (2020 - k));
-                return;
+                return Ok(());
             }
         }
+
+        Err(anyhow!("No solution found"))
     }
 
     #[test]
-    fn day_1_2() {
+    fn day_1_2() -> Result<()> {
         let mut entries = HashMap::new();
-        for line in read_file("day1.txt") {
-            let val: i32 = line.unwrap().parse().unwrap();
+        for line in read_file("day1.txt")? {
+            let val: i32 = line?.parse()?;
             entries.insert(val, 1 as i32);
         }
 
@@ -43,9 +47,11 @@ mod tests {
                 let target = 2020 - k1 - k2;
                 if entries.contains_key(&target) {
                     println!("Day1.2: {}", k1 * k2 * target);
-                    return;
+                    return Ok(());
                 }
             }
         }
+
+        Err(anyhow!("No solution found"))
     }
 }

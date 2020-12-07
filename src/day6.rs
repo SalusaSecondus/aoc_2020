@@ -1,4 +1,5 @@
 use crate::read_file;
+use anyhow::Result;
 use std::collections::HashMap;
 
 struct Group {
@@ -6,12 +7,12 @@ struct Group {
     size: u32
 }
 
-fn read_yeses(file_name: &str) -> Vec<Group> {
+fn read_yeses(file_name: &str) -> Result<Vec<Group>> {
     let mut result = vec![];
     let mut curr_group = HashMap::new();
     let mut size = 0;
-    for line in read_file(file_name) {
-        let line = line.unwrap();
+    for line in read_file(file_name)? {
+        let line = line?;
         let line = line.trim();
         if line.len() == 0 && curr_group.len() > 0 {
             result.push(
@@ -38,7 +39,7 @@ fn read_yeses(file_name: &str) -> Vec<Group> {
 
         );
     }
-    result
+    Ok(result)
 }
 
 #[cfg(test)]
@@ -46,8 +47,8 @@ mod tests {
     use super::*;
 
     #[test]
-    fn day6_smoke() {
-        let groups = read_yeses("day6_smoke.txt");
+    fn day6_smoke() -> Result<()> {
+        let groups = read_yeses("day6_smoke.txt")?;
         let mut count = 0;
         for g in &groups {
             count += g.counts.len();
@@ -63,21 +64,25 @@ mod tests {
             }
         }
         println!("Day6 smoke2: {}", count);
+
+        Ok(())
     }
 
     #[test]
-    fn day6_1() {
-        let groups = read_yeses("day6.txt");
+    fn day6_1() -> Result<()> {
+        let groups = read_yeses("day6.txt")?;
         let mut count = 0;
         for g in groups {
             count += g.counts.len();
         }
         println!("Day6.1: {}", count);
+
+        Ok(())
     }
     
     #[test]
-    fn day6_2() {
-        let groups = read_yeses("day6.txt");
+    fn day6_2() -> Result<()> {
+        let groups = read_yeses("day6.txt")?;
         let mut count = 0;
         for g in &groups {
             for c in g.counts.values() {
@@ -87,5 +92,7 @@ mod tests {
             }
         }
         println!("Day6.2: {}", count);
+
+        Ok(())
     }
 }

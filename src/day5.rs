@@ -61,6 +61,7 @@ impl PartialEq for BoardingPass {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use anyhow::Result;
     use crate::read_file;
     use std::collections::HashMap;
 
@@ -78,25 +79,27 @@ mod tests {
     }
 
     #[test]
-    fn day5_1() {
+    fn day5_1() -> Result<()> {
         let mut highest_id = 0;
-        for line in read_file("day5.txt") {
+        for line in read_file("day5.txt")? {
             let pass = BoardingPass::parse(&line.unwrap());
             if pass.id > highest_id {
                 highest_id = pass.id;
             }
         }
         println!("Day5.1: {}", highest_id);
+
+        Ok(())
     }
 
     #[test]
-    fn day5_2() {
+    fn day5_2() -> Result<()> {
         let mut lowest_id = 1000;
         let mut highest_id = 0;
 
         let mut passes = HashMap::new();
-        for line in read_file("day5.txt") {
-            let pass = BoardingPass::parse(&line.unwrap());
+        for line in read_file("day5.txt")? {
+            let pass = BoardingPass::parse(&line?);
             if pass.id < lowest_id {
                 lowest_id = pass.id;
             }
@@ -114,5 +117,7 @@ mod tests {
                 println!("Day5.2: {}", guess);
             }
         }
+
+        Ok(())
     }
 }

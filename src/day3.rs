@@ -1,3 +1,4 @@
+use anyhow::{Result};
 use std::collections::HashMap;
 
 use crate::*;
@@ -10,14 +11,14 @@ struct TreeMap {
 }
 
 impl TreeMap {
-    fn read_file(file_name: &str) -> TreeMap {
-        let lines = read_file(file_name);
+    fn read_file(file_name: &str) -> Result<TreeMap> {
+        let lines = read_file(file_name)?;
         let mut width = 0;
         let mut height = 0;
         let mut trees = HashMap::new();
         for line in lines {
             width = 0;
-            let line = line.unwrap();
+            let line = line?;
             let line = line.trim();
             for unit in line.chars() {
                 trees.insert((width, height), unit);
@@ -25,11 +26,11 @@ impl TreeMap {
             }
             height += 1;
         }
-        TreeMap {
+        Ok(TreeMap {
             width,
             height,
             trees,
-        }
+        })
     }
 
     fn get_plant(&self, x: usize, y: usize) -> &char {
@@ -58,21 +59,25 @@ mod tests {
     use super::*;
 
     #[test]
-    fn day3_smoke() {
-        let map = TreeMap::read_file("day3_smoke.txt");
+    fn day3_smoke() -> Result<()> {
+        let map = TreeMap::read_file("day3_smoke.txt")?;
 
         println!("Day3 Smoke: {}", map.count_trees(3, 1));
+
+        Ok(())
     }
 
     #[test]
-    fn day3_1() {
-        let map = TreeMap::read_file("day3.txt");
+    fn day3_1() -> Result<()> {
+        let map = TreeMap::read_file("day3.txt")?;
         println!("Day3.1: {}", map.count_trees(3, 1));
+
+        Ok(())
     }
 
     #[test]
-    fn day3_2() {
-        let map = TreeMap::read_file("day3.txt");
+    fn day3_2() -> Result<()> {
+        let map = TreeMap::read_file("day3.txt")?;
 
         let mut product: u64 = 1;
         product *= map.count_trees(1, 1) as u64;
@@ -81,5 +86,7 @@ mod tests {
         product *= map.count_trees(7, 1) as u64;
         product *= map.count_trees(1, 2) as u64;
         println!("Day3.2: {}", product);
+
+        Ok(())
     }
 }

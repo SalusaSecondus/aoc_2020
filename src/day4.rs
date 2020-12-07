@@ -1,15 +1,16 @@
 use crate::read_file;
+use anyhow::{Context, Result};
 use lazy_static::lazy_static;
 use regex::Regex;
 use std::collections::HashMap;
 
-fn load_passports(file_name: &str) -> Vec<HashMap<String, String>> {
-    let lines = read_file(file_name);
+fn load_passports(file_name: &str) -> Result<Vec<HashMap<String, String>>> {
+    let lines = read_file(file_name)?;
     let mut result = vec![];
     let mut curr = HashMap::new();
 
     for line in lines {
-        let line = line.unwrap();
+        let line = line?;
         let line = line.trim();
         if line.len() == 0 {
             if passport_valid(&curr) {
@@ -33,7 +34,7 @@ fn load_passports(file_name: &str) -> Vec<HashMap<String, String>> {
         }
     }
 
-    result
+    Ok(result)
 }
 
 fn passport_valid(passport: &HashMap<String, String>) -> bool {
@@ -52,11 +53,11 @@ fn passport_valid(passport: &HashMap<String, String>) -> bool {
     let hcl = passport.get("hcl").unwrap_or(&empty_string);
     let ecl = passport.get("ecl").unwrap_or(&empty_string);
     let pid = passport.get("pid").unwrap_or(&empty_string);
-    
+
     if !YEAR_RE.is_match(byr) {
         return false;
     } else {
-        let byr : i32 = byr.parse().unwrap();
+        let byr: i32 = byr.parse().unwrap_or(0);
         if byr < 1920 || byr > 2002 {
             return false;
         }
@@ -64,7 +65,7 @@ fn passport_valid(passport: &HashMap<String, String>) -> bool {
     if !YEAR_RE.is_match(iyr) {
         return false;
     } else {
-        let iyr : i32 = iyr.parse().unwrap();
+        let iyr: i32 = iyr.parse().unwrap();
         if iyr < 2010 || iyr > 2020 {
             return false;
         }
@@ -72,7 +73,7 @@ fn passport_valid(passport: &HashMap<String, String>) -> bool {
     if !YEAR_RE.is_match(eyr) {
         return false;
     } else {
-        let eyr : i32 = eyr.parse().unwrap();
+        let eyr: i32 = eyr.parse().unwrap_or(0);
         if eyr < 2020 || eyr > 2030 {
             return false;
         }
@@ -81,12 +82,33 @@ fn passport_valid(passport: &HashMap<String, String>) -> bool {
     if hgt.is_none() {
         return false;
     }
-    let hgt = hgt.unwrap();
-    let hgt_val: u32 = hgt.get(1).unwrap().as_str().parse().unwrap();
-    match hgt.get(2).unwrap().as_str() {
-        "cm" => if hgt_val < 150 || hgt_val > 193 { return false; },
-        "in" => if hgt_val < 59 || hgt_val > 76 { return false; },
-        _ => return false
+    if let Some(hgt) = hgt {
+        let hgt_val: u32 = hgt
+            .get(1)
+            .context("Group not found")
+            .and_then(|g| Ok(g.as_str()))
+            .and_then(|s| s.parse().context("Could not parse"))
+            .unwrap_or(0u32);
+        let hgt_str = hgt
+            .get(2)
+            .context("Could not find unit")
+            .and_then(|g| Ok(g.as_str()))
+            .unwrap_or("fake_unit");
+        match hgt_str {
+            "cm" => {
+                if hgt_val < 150 || hgt_val > 193 {
+                    return false;
+                }
+            }
+            "in" => {
+                if hgt_val < 59 || hgt_val > 76 {
+                    return false;
+                }
+            }
+            _ => return false,
+        }
+    } else {
+        return false;
     }
 
     if !HAIR_RE.is_match(hcl) {
@@ -106,8 +128,10 @@ mod tests {
     use super::*;
 
     #[test]
-    fn day4_1() {
-        let passports = load_passports("day4.txt");
+    fn day4_1() -> Result<()> {
+        let passports = load_passports("day4.txt")?;
         println!("Day4.2: {}", passports.len());
+
+        Ok(())
     }
 }

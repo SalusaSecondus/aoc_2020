@@ -13,12 +13,15 @@ use std::{
     io::{BufRead, BufReader, Lines},
 };
 
+use anyhow::{Context, Result};
+
 const FILE_BASE: &str = r"res\";
 
-pub fn read_file(file_name: &str) -> Lines<BufReader<File>> {
-    let input = File::open(FILE_BASE.to_owned() + file_name).unwrap();
+pub fn read_file(file_name: &str) -> Result<Lines<BufReader<File>>> {
+    let input = File::open(FILE_BASE.to_owned() + file_name).context("Could not open file")?;
     let reader = BufReader::new(input);
-    reader.lines()
+
+    Ok(reader.lines())
 }
 
 #[cfg(test)]

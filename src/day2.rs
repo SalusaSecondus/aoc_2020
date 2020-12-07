@@ -1,3 +1,4 @@
+use anyhow::{Context, Result};
 use lazy_static::lazy_static;
 use regex::Regex;
 
@@ -10,16 +11,28 @@ pub struct PwPolicy {
 }
 
 impl PwPolicy {
-    fn parse(text: &str) -> PwPolicy {
+    fn parse(text: &str) -> Result<PwPolicy> {
         lazy_static! {
             static ref RE: Regex = Regex::new(r"(\d+)-(\d+) ([a-z])").unwrap();
         }
-        let caps = RE.captures(text).unwrap();
-        PwPolicy {
-            min: caps.get(1).unwrap().as_str().parse().unwrap(),
-            max: caps.get(2).unwrap().as_str().parse().unwrap(),
-            target: caps.get(3).unwrap().as_str().chars().nth(0).unwrap(),
-        }
+        let caps = RE.captures(text).context("No captures")?;
+        let min = caps
+            .get(1)
+            .context("Could not find min")
+            .and_then(|c| Ok(c.as_str()))
+            .and_then(|s| s.parse().context("Could not parse min"))?;
+        let max = caps
+            .get(2)
+            .context("Could not find max")
+            .and_then(|c| Ok(c.as_str()))
+            .and_then(|s| s.parse().context("Could not parse max"))?;
+        let target = caps
+            .get(3)
+            .context("Could not parse target")
+            .and_then(|c| Ok(c.as_str()))
+            .and_then(|s| Ok(s.chars()))
+            .and_then(|mut c| c.nth(0).context("No zeroth element"))?;
+        Ok(PwPolicy { min, max, target })
     }
 
     fn is_valid(&self, pw: &str) -> bool {
@@ -48,16 +61,16 @@ impl PwPolicy {
     }
 }
 
-pub fn load_data(file_name: &str) -> Vec<(PwPolicy, String)> {
+pub fn load_data(file_name: &str) -> Result<Vec<(PwPolicy, String)>> {
     let mut result = vec![];
-    for line in read_file(file_name) {
-        let line_s = line.unwrap();
+    for line in read_file(file_name)? {
+        let line_s = line.context("Could not get line")?;
         let parts: Vec<&str> = line_s.split(":").collect();
-        let policy = PwPolicy::parse(parts[0]);
+        let policy = PwPolicy::parse(parts[0])?;
         result.push((policy, parts[1].trim().to_owned()));
     }
 
-    result
+    Ok(result)
 }
 
 #[cfg(test)]
@@ -67,11 +80,11 @@ mod tests {
     use crate::*;
 
     #[test]
-    fn day_2() {
+    fn day_2() -> Result<()> {
         let input = load_data("day2.txt");
         let mut valid1 = 0;
         let mut valid2 = 0;
-        for elem in input {
+        for elem in input? {
             if elem.0.is_valid(&elem.1) {
                 valid1 += 1;
             }
@@ -81,5 +94,6 @@ mod tests {
         }
         println!("Day 2.1: {}", valid1);
         println!("Day 2.2: {}", valid2);
+        Ok(())
     }
 }

@@ -1,5 +1,6 @@
 use crate::read_file;
 
+use anyhow::Result;
 use lazy_static::lazy_static;
 use regex::Regex;
 use std::{collections::HashMap, vec};
@@ -11,7 +12,7 @@ struct Rule {
 }
 
 impl Rule {
-    fn parse(line: &str) -> Rule {
+    fn parse(line: &str) -> Result<Rule> {
         lazy_static! {
             static ref CONTAINER_RE: Regex = Regex::new(r"^(.*?) bags contain ").unwrap();
             static ref CONTENT_RE: Regex = Regex::new(r"(\d+) (.*?) bags?(?:,|\.)").unwrap();
@@ -23,25 +24,25 @@ impl Rule {
 
         for caps in CONTENT_RE.captures_iter(line) {
             contents.insert(
-                caps.get(2).unwrap().as_str().to_string(),
-                caps.get(1).unwrap().as_str().parse().unwrap(),
+                caps.get(2).expect("Group not found").as_str().to_string(),
+                caps.get(1).expect("Group not found").as_str().parse()?,
             );
         }
-        Rule { color, contents }
+        Ok(Rule { color, contents })
     }
 }
 
-fn parse_rules(file_name: &str) -> HashMap<String, Rule> {
+fn parse_rules(file_name: &str) -> Result<HashMap<String, Rule>> {
     let mut result = HashMap::new();
-    for line in read_file(file_name) {
-        let line = line.unwrap();
+    for line in read_file(file_name)? {
+        let line = line?;
         let line = line.trim();
 
-        let rule = Rule::parse(line);
+        let rule = Rule::parse(line)?;
         result.insert(rule.color.to_owned(), rule);
     }
 
-    result
+    Ok(result)
 }
 
 fn find_containers(rules: &HashMap<String, Rule>, target: &str) -> Vec<String> {
@@ -99,33 +100,41 @@ mod tests {
     use super::*;
 
     #[test]
-    fn day7_smoke1() {
-        let rules = parse_rules("day7_smoke.txt");
+    fn day7_smoke1() -> Result<()> {
+        let rules = parse_rules("day7_smoke.txt")?;
         // println!("Day7 smoke1 rules: {:?}", rules);
         let outermost = find_containers(&rules, "shiny gold");
         println!("Day7 smoke1: {:?}", outermost);
         assert_eq!(4, outermost.len());
+
+        Ok(())
     }
 
     #[test]
-    fn day7_1() {
-        let rules = parse_rules("day7.txt");
+    fn day7_1() -> Result<()>  {
+        let rules = parse_rules("day7.txt")?;
         // println!("Day7  rules: {:?}", rules);
         let outermost = find_containers(&rules, "shiny gold");
         println!("Day7.1: {}", outermost.len());
+
+        Ok(())
     }
 
     #[test]
-    fn day7_smoke2() {
-        let rules = parse_rules("day7_smoke2.txt");
+    fn day7_smoke2()  -> Result<()> {
+        let rules = parse_rules("day7_smoke2.txt")?;
         let size = count_bags(&rules, "shiny gold");
         assert_eq!(126, size);
+
+        Ok(())
     }
 
     #[test]
-    fn day7_2() {
-        let rules = parse_rules("day7.txt");
+    fn day7_2()  -> Result<()> {
+        let rules = parse_rules("day7.txt")?;
         let size = count_bags(&rules, "shiny gold");
         println!("Day7.2: {}", size);
+
+        Ok(())
     }
 }
