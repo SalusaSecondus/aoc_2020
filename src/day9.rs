@@ -78,18 +78,17 @@ impl XmasState {
     }
 }
 
-fn find_range_sum(values: &VecDeque<u64>, target: &u64) -> Result<(u64, u64)> {
+fn find_range_sum(values: &[u64], target: &u64) -> Result<(u64, u64)> {
     for start in 0..(values.len() - 1) {
         let mut min = u64::MAX;
         let mut max = 0;
         let mut running_sum = 0;
-        for idx in start..values.len() {
-            let curr = values[idx];
-            if curr < min {
-                min = curr;
+        for curr in &values[start..] {
+            if *curr < min {
+                min = *curr;
             }
-            if curr > max {
-                max = curr;
+            if *curr > max {
+                max = *curr;
             }
             running_sum += curr;
             if &running_sum > target {
@@ -109,12 +108,13 @@ mod tests {
 
     #[test]
     fn day9_smoke1() -> Result<()> {
-        let values = load_numbers("day9_smoke.txt")?;
+        let mut values = load_numbers("day9_smoke.txt")?;
         let mut state = XmasState::load(values.clone(), 5);
         println!("Day9 smoke1 state {:?}", state);
         assert_eq!(127, state.find_first_invalid()?);
 
-        let (min, max)  = find_range_sum(&values, &127)?;
+        let values = values.make_contiguous();
+        let (min, max)  = find_range_sum(values, &127)?;
         assert_eq!(15, min);
         assert_eq!(47, max);
         let result = min + max;
@@ -124,13 +124,16 @@ mod tests {
 
     #[test]
     fn day9_1() -> Result<()> {
-        let values = load_numbers("day9.txt")?;
+        let mut values = load_numbers("day9.txt")?;
         let mut state = XmasState::load(values.clone(), 25);
         let first_invalid = state.find_first_invalid()?;
         println!("Day9.1 {}", first_invalid);
+        assert_eq!(29221323, first_invalid);
 
-        let (min, max)  = find_range_sum(&values, &first_invalid)?;
+        let values = values.make_contiguous();
+        let (min, max)  = find_range_sum(values, &first_invalid)?;
         println!("Day9.2 {}", min + max);
+        assert_eq!(4389369, min + max);
         Ok(())
     }
 }
