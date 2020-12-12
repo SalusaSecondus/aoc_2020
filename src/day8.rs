@@ -119,7 +119,7 @@ mod tests {
     #[test]
     fn day8_2() -> Result<()> {
         let template = Program::load_program("day8.txt")?;
-        for idx in 0 .. template.instructions.len() {
+        for idx in 0..template.instructions.len() {
             let mut dupe = template.clone();
             match dupe.instructions[idx].op {
                 OpCode::Nop => dupe.instructions[idx].op = OpCode::Jmp,
@@ -129,7 +129,7 @@ mod tests {
             dupe.run_till_end()?;
             if dupe.pc == template.instructions.len() {
                 println!("Day8.2: {}", dupe.accumulator);
-                return Ok(())
+                return Ok(());
             }
         }
         Ok(())

@@ -4,7 +4,7 @@ use std::collections::HashMap;
 
 struct Group {
     counts: HashMap<char, u32>,
-    size: u32
+    size: u32,
 }
 
 fn read_yeses(file_name: &str) -> Result<Vec<Group>> {
@@ -15,12 +15,10 @@ fn read_yeses(file_name: &str) -> Result<Vec<Group>> {
         let line = line?;
         let line = line.trim();
         if line.len() == 0 && curr_group.len() > 0 {
-            result.push(
-                Group {
-                    counts: curr_group, size
-                }
-
-            );
+            result.push(Group {
+                counts: curr_group,
+                size,
+            });
             curr_group = HashMap::new();
             size = 0;
         } else {
@@ -32,12 +30,10 @@ fn read_yeses(file_name: &str) -> Result<Vec<Group>> {
         }
     }
     if curr_group.len() > 0 {
-        result.push(
-            Group {
-                counts: curr_group, size
-            }
-
-        );
+        result.push(Group {
+            counts: curr_group,
+            size,
+        });
     }
     Ok(result)
 }
@@ -79,7 +75,7 @@ mod tests {
 
         Ok(())
     }
-    
+
     #[test]
     fn day6_2() -> Result<()> {
         let groups = read_yeses("day6.txt")?;

@@ -114,7 +114,7 @@ mod tests {
         assert_eq!(127, state.find_first_invalid()?);
 
         let values = values.make_contiguous();
-        let (min, max)  = find_range_sum(values, &127)?;
+        let (min, max) = find_range_sum(values, &127)?;
         assert_eq!(15, min);
         assert_eq!(47, max);
         let result = min + max;
@@ -131,7 +131,7 @@ mod tests {
         assert_eq!(29221323, first_invalid);
 
         let values = values.make_contiguous();
-        let (min, max)  = find_range_sum(values, &first_invalid)?;
+        let (min, max) = find_range_sum(values, &first_invalid)?;
         println!("Day9.2 {}", min + max);
         assert_eq!(4389369, min + max);
         Ok(())

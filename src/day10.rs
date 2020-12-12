@@ -92,7 +92,7 @@ mod tests {
 
         Ok(())
     }
-    
+
     #[test]
     fn day10_2() -> Result<()> {
         let adapters = load_numbers("day10.txt")?;

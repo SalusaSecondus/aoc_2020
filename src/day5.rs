@@ -61,8 +61,8 @@ impl PartialEq for BoardingPass {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use anyhow::Result;
     use crate::read_file;
+    use anyhow::Result;
     use std::collections::HashMap;
 
     #[test]

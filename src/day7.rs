@@ -111,7 +111,7 @@ mod tests {
     }
 
     #[test]
-    fn day7_1() -> Result<()>  {
+    fn day7_1() -> Result<()> {
         let rules = parse_rules("day7.txt")?;
         // println!("Day7  rules: {:?}", rules);
         let outermost = find_containers(&rules, "shiny gold");
@@ -121,7 +121,7 @@ mod tests {
     }
 
     #[test]
-    fn day7_smoke2()  -> Result<()> {
+    fn day7_smoke2() -> Result<()> {
         let rules = parse_rules("day7_smoke2.txt")?;
         let size = count_bags(&rules, "shiny gold");
         assert_eq!(126, size);
@@ -130,7 +130,7 @@ mod tests {
     }
 
     #[test]
-    fn day7_2()  -> Result<()> {
+    fn day7_2() -> Result<()> {
         let rules = parse_rules("day7.txt")?;
         let size = count_bags(&rules, "shiny gold");
         println!("Day7.2: {}", size);
