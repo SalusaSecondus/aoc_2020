@@ -26,7 +26,7 @@ fn parse_problem(file_name: &str) -> Result<(u64, Vec<u64>)> {
     Ok((earliest_time, busses))
 }
 
-fn print_crt_problem(busses: &[u64]) { 
+fn print_crt_problem(busses: &[u64]) {
     for idx in 0..busses.len() {
         let bus = busses[idx];
         if bus == 0 {
@@ -52,7 +52,7 @@ fn crt_brute_force(nums: &[u64]) -> u64 {
 
     for idx in 0..nums.len() {
         let bus = nums[idx];
-        
+
         let target = to_mod(idx as u64, bus);
 
         // println!("START: Idx:{}, Step: {}, Target:{}, Solution: {}", idx, step, target, solution);
@@ -60,7 +60,7 @@ fn crt_brute_force(nums: &[u64]) -> u64 {
             // println!("\tSolution: {} Actual: {}", solution, solution % bus);
             solution += step;
         }
-        step *= bus;        
+        step *= bus;
     }
 
     solution
@@ -92,7 +92,6 @@ mod tests {
         assert_eq!(944, soonest);
         println!("Day 13.smoke: {}", best_wait * best_bus);
 
-
         Ok(())
     }
 
@@ -115,7 +114,7 @@ mod tests {
         }
         println!("Day 13.1: {}", best_wait * best_bus);
         assert_eq!(119, best_wait * best_bus);
-        
+
         Ok(())
     }
 
