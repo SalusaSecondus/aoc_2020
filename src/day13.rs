@@ -1,27 +1,25 @@
 use anyhow::{Context, Result};
 
 fn parse_busses(line: &str) -> Result<Vec<u64>> {
-    let mut result = vec![];
-    for item in line.split(",") {
-        if item != "x" {
-            result.push(item.parse()?);
-        } else {
-            result.push(1);
-        }
-    }
-
-    Ok(result)
+    line.split(",")
+        .map(|item| {
+            if item != "x" {
+                item.parse().context("Could not parse")
+            } else {
+                Ok(1)
+            }
+        })
+        .collect()
 }
 
 fn parse_problem(file_name: &str) -> Result<(u64, Vec<u64>)> {
-    let mut lines = vec![];
-    for l in crate::read_file(file_name)? {
-        lines.push(l?);
-    }
+    let mut input = crate::read_file(file_name)?;
 
-    let earliest_time = lines.get(0).context("No earliest time")?.parse()?;
-    let busses = lines.get(1).context("No busses")?;
-    let busses = parse_busses(&busses)?;
+    let line = input.next().context("No first line")??;
+
+    let earliest_time = line.parse()?;
+    let line = input.next().context("No second line")??;
+    let busses = parse_busses(&line)?;
 
     Ok((earliest_time, busses))
 }
@@ -134,7 +132,7 @@ mod tests {
         let answer = crt_brute_force(&problem.1);
 
         println!("Day 13.2: {}", answer);
-
+        assert_eq!(1106724616194525, answer);
         Ok(())
     }
 }
