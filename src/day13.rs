@@ -1,7 +1,7 @@
 use anyhow::{Context, Result};
 
 fn parse_busses(line: &str) -> Result<Vec<u64>> {
-    line.split(",")
+    line.split(',')
         .map(|item| {
             if item != "x" {
                 item.parse().context("Could not parse")
@@ -25,12 +25,11 @@ fn parse_problem(file_name: &str) -> Result<(u64, Vec<u64>)> {
 }
 
 fn print_crt_problem(busses: &[u64]) {
-    for idx in 0..busses.len() {
-        let bus = busses[idx];
-        if bus == 0 {
+    for (idx, bus) in busses.iter().enumerate() {
+        if *bus == 0 {
             continue;
         }
-        let remainder = to_mod(idx as u64, bus);
+        let remainder = to_mod(idx as u64, *bus);
 
         println!("x = {} mod {}", remainder, bus);
     }
@@ -48,14 +47,10 @@ fn crt_brute_force(nums: &[u64]) -> u64 {
     let mut solution = 0;
     let mut step = 1u64;
 
-    for idx in 0..nums.len() {
-        let bus = nums[idx];
+    for (idx, bus) in nums.iter().enumerate() {
+        let target = to_mod(idx as u64, *bus);
 
-        let target = to_mod(idx as u64, bus);
-
-        // println!("START: Idx:{}, Step: {}, Target:{}, Solution: {}", idx, step, target, solution);
         while solution % bus != target {
-            // println!("\tSolution: {} Actual: {}", solution, solution % bus);
             solution += step;
         }
         step *= bus;

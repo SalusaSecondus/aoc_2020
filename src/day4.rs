@@ -12,16 +12,16 @@ fn load_passports(file_name: &str) -> Result<Vec<HashMap<String, String>>> {
     for line in lines {
         let line = line?;
         let line = line.trim();
-        if line.len() == 0 {
+        if line.is_empty() {
             if passport_valid(&curr) {
                 result.push(curr);
             }
             curr = HashMap::new();
         } else {
-            let parts = line.split(" ");
+            let parts = line.split(' ');
             for part in parts {
                 let part = part.trim();
-                if part.len() == 0 {
+                if part.is_empty() {
                     continue;
                 }
                 // println!("Part: >{}< ", part);
@@ -86,13 +86,13 @@ fn passport_valid(passport: &HashMap<String, String>) -> bool {
         let hgt_val: u32 = hgt
             .get(1)
             .context("Group not found")
-            .and_then(|g| Ok(g.as_str()))
+            .map(|g| g.as_str())
             .and_then(|s| s.parse().context("Could not parse"))
             .unwrap_or(0u32);
         let hgt_str = hgt
             .get(2)
             .context("Could not find unit")
-            .and_then(|g| Ok(g.as_str()))
+            .map(|g| g.as_str())
             .unwrap_or("fake_unit");
         match hgt_str {
             "cm" => {

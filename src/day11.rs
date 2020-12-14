@@ -39,7 +39,7 @@ impl fmt::Display for Ferry {
                     SeatState::Occupied => write!(f, "#")?,
                 }
             }
-            write!(f, "\n")?;
+            writeln!(f)?;
         }
         Ok(())
     }
@@ -88,9 +88,9 @@ impl Ferry {
         let row = row as usize;
         let col = col as usize;
         if let Some(row) = self.seats.get(row) {
-            return row.get(col).unwrap_or(&SeatState::Empty);
+            row.get(col).unwrap_or(&SeatState::Empty)
         } else {
-            return &SeatState::Empty;
+            &SeatState::Empty
         }
     }
 

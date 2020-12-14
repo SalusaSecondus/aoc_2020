@@ -14,7 +14,7 @@ fn read_yeses(file_name: &str) -> Result<Vec<Group>> {
     for line in read_file(file_name)? {
         let line = line?;
         let line = line.trim();
-        if line.len() == 0 && curr_group.len() > 0 {
+        if line.is_empty() && !curr_group.is_empty() {
             result.push(Group {
                 counts: curr_group,
                 size,
@@ -29,7 +29,7 @@ fn read_yeses(file_name: &str) -> Result<Vec<Group>> {
             }
         }
     }
-    if curr_group.len() > 0 {
+    if !curr_group.is_empty() {
         result.push(Group {
             counts: curr_group,
             size,

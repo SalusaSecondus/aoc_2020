@@ -18,7 +18,7 @@ impl BoardingPass {
 
         let mut chars = code.chars();
         for _ in 0..7 {
-            row = row << 1;
+            row <<= 1;
             row += match chars.next().unwrap() {
                 'B' => 1,
                 'F' => 0,
@@ -27,7 +27,7 @@ impl BoardingPass {
         }
         let row = row;
         for _ in 0..3 {
-            col = col << 1;
+            col <<= 1;
             col += match chars.next().unwrap() {
                 'R' => 1,
                 'L' => 0,

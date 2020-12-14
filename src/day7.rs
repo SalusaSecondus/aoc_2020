@@ -83,7 +83,7 @@ fn find_containers(rules: &HashMap<String, Rule>, target: &str) -> Vec<String> {
 fn count_bags(rules: &HashMap<String, Rule>, target: &str) -> u32 {
     let mut queue = vec![(target, 1)];
     let mut result = 0;
-    while queue.len() > 0 {
+    while !queue.is_empty() {
         // println!("Count {}, Current queue: {:?}", result, queue);
         let current = queue.pop().unwrap();
         result += current.1;

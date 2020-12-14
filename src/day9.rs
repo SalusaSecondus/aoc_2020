@@ -1,4 +1,5 @@
 use std::collections::{HashMap, VecDeque};
+use std::cmp::Ordering;
 
 use crate::read_file;
 use anyhow::{bail, Context, Result};
@@ -91,10 +92,10 @@ fn find_range_sum(values: &[u64], target: &u64) -> Result<(u64, u64)> {
                 max = *curr;
             }
             running_sum += curr;
-            if &running_sum > target {
-                continue;
-            } else if &running_sum == target {
-                return Ok((min, max));
+            match running_sum.cmp(target) {
+                Ordering::Greater => continue,
+                Ordering::Equal => return Ok((min, max)),
+                _ => (),
             }
         }
     }

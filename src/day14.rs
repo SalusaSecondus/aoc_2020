@@ -53,9 +53,7 @@ impl BitMask {
     }
 
     fn apply(&self, num: u64) -> u64 {
-        let num = num | self.ones;
-        let num = num & self.zeros;
-        num
+        (num | self.ones) & self.zeros
     }
 
     fn apply2(&self, num: u64) -> Vec<u64> {

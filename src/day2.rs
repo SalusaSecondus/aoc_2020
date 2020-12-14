@@ -19,19 +19,18 @@ impl PwPolicy {
         let min = caps
             .get(1)
             .context("Could not find min")
-            .and_then(|c| Ok(c.as_str()))
+            .map(|c| c.as_str())
             .and_then(|s| s.parse().context("Could not parse min"))?;
         let max = caps
             .get(2)
             .context("Could not find max")
-            .and_then(|c| Ok(c.as_str()))
+            .map(|c| c.as_str())
             .and_then(|s| s.parse().context("Could not parse max"))?;
         let target = caps
             .get(3)
             .context("Could not parse target")
-            .and_then(|c| Ok(c.as_str()))
-            .and_then(|s| Ok(s.chars()))
-            .and_then(|mut c| c.nth(0).context("No zeroth element"))?;
+            .map(|c| c.as_str().chars())
+            .and_then(|mut c| c.next().context("No zeroth element"))?;
         Ok(PwPolicy { min, max, target })
     }
 
@@ -44,7 +43,7 @@ impl PwPolicy {
         }
 
         // println!("Min: {}, Max: {}, Target: {}, PW: {}, Count: {}", self.min, self.max, self.target, pw, count);
-        return count >= self.min && count <= self.max;
+        count >= self.min && count <= self.max
     }
 
     fn is_valid2(&self, pw: &str) -> bool {
@@ -65,7 +64,7 @@ pub fn load_data(file_name: &str) -> Result<Vec<(PwPolicy, String)>> {
     let mut result = vec![];
     for line in read_file(file_name)? {
         let line_s = line.context("Could not get line")?;
-        let parts: Vec<&str> = line_s.split(":").collect();
+        let parts: Vec<&str> = line_s.split(':').collect();
         let policy = PwPolicy::parse(parts[0])?;
         result.push((policy, parts[1].trim().to_owned()));
     }

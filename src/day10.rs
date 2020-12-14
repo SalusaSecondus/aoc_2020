@@ -2,11 +2,11 @@ use std::collections::{HashMap, HashSet};
 
 use anyhow::{bail, Context, Result};
 
-fn find_diffs(adapters: &Vec<i64>) -> Result<[u32; 3]> {
+fn find_diffs(adapters: &[i64]) -> Result<[u32; 3]> {
     let mut result = [0, 0, 0];
 
-    let mut adapters = adapters.clone();
-    adapters.sort();
+    let mut adapters = adapters.to_owned();
+    adapters.sort_unstable();
     let mut previous = 0;
     for j in adapters {
         let gap = j - previous;
@@ -20,9 +20,9 @@ fn find_diffs(adapters: &Vec<i64>) -> Result<[u32; 3]> {
     Ok(result)
 }
 
-fn count_ways(adapters: &Vec<i64>) -> Result<(i64, i64, HashMap<i64, i64>)> {
-    let mut adapters = adapters.clone();
-    adapters.sort();
+fn count_ways(adapters: &[i64]) -> Result<(i64, i64, HashMap<i64, i64>)> {
+    let mut adapters = adapters.to_owned();
+    adapters.sort_unstable();
 
     let mut set = HashSet::new();
     for a in &adapters {
