@@ -45,7 +45,13 @@ mod tests {
 
     #[test]
     fn day15_1() {
-        println!("Day 15.1: {}", get_value_on_turn(&[11,0,1,10,5,19], 2020));
-        println!("Day 15.2: {}", get_value_on_turn(&[11,0,1,10,5,19], 30000000));
+        println!(
+            "Day 15.1: {}",
+            get_value_on_turn(&[11, 0, 1, 10, 5, 19], 2020)
+        );
+        println!(
+            "Day 15.2: {}",
+            get_value_on_turn(&[11, 0, 1, 10, 5, 19], 30000000)
+        );
     }
 }

@@ -1,5 +1,5 @@
-use std::collections::{HashMap, VecDeque};
 use std::cmp::Ordering;
+use std::collections::{HashMap, VecDeque};
 
 use crate::read_file;
 use anyhow::{bail, Context, Result};
