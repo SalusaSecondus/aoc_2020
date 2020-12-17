@@ -116,9 +116,9 @@ impl World {
 
     fn step(&mut self) {
         let mut cubes = HashMap::new();
-        let mut x_limits = (0, 0);
-        let mut y_limits = (0, 0);
-        let mut z_limits = (0, 0);
+        let mut x_limits = (i32::MAX, i32::MIN);
+        let mut y_limits = (i32::MAX, i32::MIN);
+        let mut z_limits = (i32::MAX, i32::MIN);
 
         for z in self.z_limits.0 - 1..self.z_limits.1 + 2 {
             for y in self.y_limits.0 - 1..self.y_limits.1 + 2 {
@@ -231,10 +231,10 @@ impl HyperWorld {
 
     fn step(&mut self) {
         let mut cubes = HashMap::new();
-        let mut x_limits = (0, 0);
-        let mut y_limits = (0, 0);
-        let mut z_limits = (0, 0);
-        let mut w_limits = (0, 0);
+        let mut x_limits = (i32::MAX, i32::MIN);
+        let mut y_limits = (i32::MAX, i32::MIN);
+        let mut z_limits = (i32::MAX, i32::MIN);
+        let mut w_limits = (i32::MAX, i32::MIN);
 
         for w in self.w_limits.0 - 1..self.w_limits.1 + 2 {
             for z in self.z_limits.0 - 1..self.z_limits.1 + 2 {
@@ -338,7 +338,7 @@ mod tests {
         println!("{}", world);
         for _cycle in 0..6 {
             world.step();
-            // println!("After {} cycle(s)\n{}\n", cycle + 1, world);
+            // println!("After {} cycle(s)\n{}\n", _cycle + 1, world);
         }
 
         assert_eq!(112, world.count_active());
@@ -351,7 +351,7 @@ mod tests {
         println!("{}", world);
         for _cycle in 0..6 {
             world.step();
-            // println!("After {} cycle(s)\n{}\n", cycle + 1, world);
+            // println!("After {} cycle(s)\n{}\n", _cycle + 1, world);
         }
 
         println!("Day 17.1: {}", world.count_active());
