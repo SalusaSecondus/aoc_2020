@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::{HashMap, VecDeque};
 
 use anyhow::{Context, Result};
 use lazy_static::lazy_static;
@@ -77,136 +77,109 @@ fn build_message_rule(
     }
 }
 
-#[derive(Debug)]
-enum Rule {
-    Literal(char),
-    Choice(Vec<u32>, Vec<u32>),
+#[derive(Debug, Clone)]
+enum RuleOutput {
+    Terminal(char),
+    Nonterminal(Vec<Vec<u32>>),
 }
 
-fn does_rule_match(rule_num: u32, s: &str, rules: &HashMap<u32, Rule>) -> Result<bool> {
-    let chars: Vec<char> = s.chars().collect();
-    let consumed = rule_match_internal(rule_num, &chars, 0, rules, 0)?;
-    Ok(consumed == s.len())
-}
+#[derive(Debug, Clone)]
+struct RuleTable(HashMap<u32, RuleOutput>);
 
-fn rule_match_internal(
-    rule_num: u32,
-    s: &[char],
-    pos: usize,
-    rules: &HashMap<u32, Rule>,
-    depth: usize,
-) -> Result<usize> {
-    for _ in 0..depth + 1 {
-        print!("\t");
-    }
-    println!("{}", rule_num);
-    if pos >= s.len() {
-        println!("!!Out of bounds for rule {} and position {}", rule_num, pos);
-        return Ok(0);
-    }
-    let rule = rules.get(&rule_num).context("Invalid rule number")?;
-    match rule {
-        Rule::Literal(c) => {
-            if *c == s[pos] {
-                return Ok(1);
+impl RuleTable {
+    fn parse_file(file_name: &str) -> Result<(RuleTable, Vec<String>)> {
+        lazy_static! {
+            static ref RULE_RE: Regex = Regex::new(r"^(\d+): (.*)$").unwrap();
+            static ref LITERAL_RE: Regex = Regex::new("\"(.)\"").unwrap();
+        }
+        let mut messages = vec![];
+        let mut map: HashMap<u32, RuleOutput> = HashMap::new();
+
+        for line in crate::read_file(file_name)? {
+            let line = line?;
+            let line = line.trim();
+
+            if line.is_empty() {
+                continue;
+            } else if let Some(captures) = RULE_RE.captures(line) {
+                let rule_num = captures
+                    .get(1)
+                    .context("Missing number")?
+                    .as_str()
+                    .parse()?;
+                let content = captures.get(2).context("Missing content")?.as_str();
+
+                if let Some(l) = LITERAL_RE.captures(content) {
+                    let c = l.get(1).unwrap().as_str().chars().next().unwrap();
+                    map.insert(rule_num, RuleOutput::Terminal(c));
+                } else {
+                    let mut output_choices = vec![];
+                    let mut working_target: Vec<u32> = vec![];
+
+                    for token in content.split(' ') {
+                        if token == "|" {
+                            output_choices.push(working_target);
+                            working_target = vec![];
+                        } else {
+                            working_target.push(token.parse()?);
+                        }
+                    }
+                    if !working_target.is_empty() {
+                        output_choices.push(working_target);
+                    }
+                    map.insert(rule_num, RuleOutput::Nonterminal(output_choices));
+                }
             } else {
-                return Ok(0);
+                messages.push(line.to_owned());
             }
         }
 
-        Rule::Choice(v1, v2) => {
-            let mut failed = false;
-            let mut offset = 0;
-            for r in v1.iter() {
-                let consumed = rule_match_internal(*r, s, pos + offset, rules, depth + 1)?;
-                if consumed == 0 {
-                    failed = true;
-                    break;
-                } else {
-                    offset += consumed;
-                }
-            }
-            if !failed {
-                return Ok(offset);
+        Ok((RuleTable(map), messages))
+    }
+
+    fn is_match(&self, rule_num: u32, s: &str) -> bool {
+        let chars: Vec<char> = s.chars().collect();
+        let RuleTable(rules) = self;
+
+        // let mut position = 0
+        let mut possibilities = VecDeque::new();
+        possibilities.push_back((0 as usize, vec![rules.get(&rule_num).unwrap()]));
+
+        while !possibilities.is_empty() {
+            let mut state = possibilities.pop_front().unwrap();
+            // println!("\t {:?}", state);
+            if state.0 == s.len() && state.1.is_empty() {
+                // if !possibilities.is_empty() {
+                //     println!("\tAccepted with {} possibilities left.", possibilities.len());
+                // }
+                return true;
+            } else if state.0 == s.len() || state.1.is_empty() {
+                continue;
             }
 
-            if !v2.is_empty() {
-                for _ in 0..depth + 1 {
-                    print!("\t");
-                }
-                println!("--");
-                let mut failed = false;
-                let mut offset = 0;
-                for r in v2.iter() {
-                    let consumed = rule_match_internal(*r, s, pos + offset, rules, depth + 1)?;
-                    if consumed == 0 {
-                        failed = true;
-                        break;
-                    } else {
-                        offset += consumed;
+            let next_symbol = state.1.pop().unwrap();
+            match next_symbol {
+                RuleOutput::Terminal(c) => {
+                    if *c == chars[state.0] {
+                        state.0 += 1;
+                        possibilities.push_back(state);
                     }
                 }
-                if !failed {
-                    return Ok(offset);
+                RuleOutput::Nonterminal(vv) => {
+                    for choice in vv {
+                        let mut new_state = state.clone();
+                        for s in choice.iter().rev() {
+                            let rule_output = rules.get(s).unwrap();
+                            new_state.1.push(rule_output);
+                        }
+                        possibilities.push_back(new_state);
+                    }
                 }
-            }
+            };
         }
-    };
-    Ok(0)
-}
 
-fn load_day19_rules(file_name: &str) -> Result<(HashMap<u32, Rule>, Vec<String>)> {
-    lazy_static! {
-        static ref RULE_RE: Regex = Regex::new(r"^(\d+): (.*)$").unwrap();
-        static ref LITERAL_RE: Regex = Regex::new("\"(.)\"").unwrap();
+        false
     }
-    let mut rules = HashMap::new();
-    let mut messages = vec![];
-
-    for line in crate::read_file(file_name)? {
-        let line = line?;
-        let line = line.trim();
-
-        if line.is_empty() {
-            continue;
-        } else if let Some(captures) = RULE_RE.captures(line) {
-            let rule_num = captures
-                .get(1)
-                .context("Missing number")?
-                .as_str()
-                .parse()?;
-            let content = captures.get(2).context("Missing content")?.as_str();
-
-            if let Some(l) = LITERAL_RE.captures(content) {
-                rules.insert(
-                    rule_num,
-                    Rule::Literal(
-                        l.get(1)
-                            .context("Missing literal")?
-                            .as_str()
-                            .chars()
-                            .next()
-                            .unwrap(),
-                    ),
-                );
-            } else {
-                let mut vec1 = vec![];
-                let mut vec2 = vec![];
-                let mut curr_vec = &mut vec1;
-                for part in content.split(' ') {
-                    match part {
-                        "|" => curr_vec = &mut vec2,
-                        _ => curr_vec.push(part.parse()?),
-                    };
-                }
-                rules.insert(rule_num, Rule::Choice(vec1, vec2));
-            }
-        } else {
-            messages.push(line.to_owned());
-        }
-    }
-
-    Ok((rules, messages))
 }
 
 #[cfg(test)]
@@ -222,7 +195,7 @@ mod tests {
         let mut count = 0;
         for m in messages {
             if rule_0.is_match(&m) {
-                println!("Day 19 smoke1 match {}", m);
+                // println!("Day 19 smoke1 match {}", m);
                 count += 1;
             }
         }
@@ -233,12 +206,13 @@ mod tests {
 
     #[test]
     fn day19_smoke1_1() -> Result<()> {
-        let (rules, messages) = load_day19_rules("day19_smoke.txt")?;
+        let (rules, messages) = RuleTable::parse_file("day19_smoke.txt")?;
 
         let mut count = 0;
         for m in messages {
-            if does_rule_match(0, &m, &rules)? {
-                println!("Day 19 smoke1.1 match {}", m);
+            // println!("Day 19 smoke1.1: {}", m);
+            if rules.is_match(0, &m) {
+                // println!("\tmatch");
                 count += 1;
             }
         }
@@ -247,28 +221,6 @@ mod tests {
         Ok(())
     }
 
-    #[test]
-    fn day19_exp() -> Result<()> {
-        let a: Vec<char> = "a".chars().collect();
-        let aa: Vec<char> = "aa".chars().collect();
-        let b: Vec<char> = "b".chars().collect();
-
-        let mut rules = HashMap::new();
-        rules.insert(0, Rule::Literal('a'));
-        rules.insert(1, Rule::Literal('b'));
-        rules.insert(2, Rule::Choice(vec![0], vec![1]));
-        assert_eq!(1, rule_match_internal(0, &a, 0, &rules, 0)?);
-        assert_eq!(0, rule_match_internal(0, &b, 0, &rules, 0)?);
-
-        assert_eq!(0, rule_match_internal(1, &a, 0, &rules, 0)?);
-        assert_eq!(1, rule_match_internal(1, &b, 0, &rules, 0)?);
-
-        assert_eq!(1, rule_match_internal(2, &a, 0, &rules, 0)?);
-        assert_eq!(1, rule_match_internal(2, &aa, 0, &rules, 0)?);
-        assert_eq!(1, rule_match_internal(2, &b, 0, &rules, 0)?);
-
-        Ok(())
-    }
     #[test]
     fn day19_1() -> Result<()> {
         let (raw_rules, messages) = load_day19_file("day19.txt")?;
@@ -289,11 +241,11 @@ mod tests {
 
     #[test]
     fn day19_1_1() -> Result<()> {
-        let (rules, messages) = load_day19_rules("day19.txt")?;
+        let (rules, messages) = RuleTable::parse_file("day19.txt")?;
 
         let mut count = 0;
         for m in messages {
-            if does_rule_match(0, &m, &rules)? {
+            if rules.is_match(0, &m) {
                 // println!("Day 19 smoke1 match {}", m);
                 count += 1;
             }
@@ -303,37 +255,62 @@ mod tests {
         Ok(())
     }
 
+    fn apply_part2(rules: &mut RuleTable) {
+        rules
+            .0
+            .insert(8, RuleOutput::Nonterminal(vec![vec![42], vec![42, 8]]));
+        rules.0.insert(
+            11,
+            RuleOutput::Nonterminal(vec![vec![42, 31], vec![42, 11, 31]]),
+        );
+    }
+
     #[test]
     fn day19_smoke2() -> Result<()> {
-        let (mut rules, messages) = load_day19_rules("day19_smoke2.txt")?;
+        let (mut rules, messages) = RuleTable::parse_file("day19_smoke2.txt")?;
 
         let mut count = 0;
         for m in &messages {
             // println!("\tChecking {}", m);
-            if does_rule_match(0, m, &rules)? {
-                println!("Day 19 smoke2.1 match {}", m);
+            if rules.is_match(0, m) {
+                // println!("Day 19 smoke2.1 match {}", m);
                 count += 1;
             }
         }
 
         assert_eq!(3, count);
 
-        rules.insert(8, Rule::Choice(vec![42], vec![42, 8]));
-        rules.insert(11, Rule::Choice(vec![42, 31], vec![42, 11, 31]));
-        println!("Rule 8: {:?}", rules.get(&8));
-        println!("Rule 11: {:?}", rules.get(&11));
+        apply_part2(&mut rules);
 
         let mut count = 0;
         for m in &messages {
-            println!("\tChecking {}", m);
-            if does_rule_match(0, m, &rules)? {
-                println!("Day 19 smoke2.2 match {}", m);
+            // println!("\tChecking {}", m);
+            if rules.is_match(0, m) {
+                // println!("Day 19 smoke2.1 match {}", m);
                 count += 1;
             }
         }
 
         assert_eq!(12, count);
 
+        Ok(())
+    }
+
+    #[test]
+    fn day19_2() -> Result<()> {
+        let (mut rules, messages) = RuleTable::parse_file("day19.txt")?;
+
+        apply_part2(&mut rules);
+
+        let mut count = 0;
+        for m in messages {
+            if rules.is_match(0, &m) {
+                // println!("Day 19 smoke1 match {}", m);
+                count += 1;
+            }
+        }
+        println!("Day 19.2: {}", count);
+        assert_eq!(424, count);
         Ok(())
     }
 }
