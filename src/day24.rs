@@ -1,8 +1,5 @@
 use anyhow::{bail, Result};
-use core::cmp::max;
-use std::{cmp::min, collections::HashSet, str::Chars};
-
-type CoordLimits = ((i32, i32), (i32, i32));
+use std::{collections::HashSet, str::Chars};
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
 struct Coord {
@@ -107,35 +104,11 @@ fn follow_path(floor: &mut HashSet<Coord>, path: &str) -> Result<()> {
     Ok(())
 }
 
-fn limits(floor: &HashSet<Coord>) -> CoordLimits {
-    let mut min_x = i32::MAX;
-    let mut min_y = i32::MAX;
-    let mut max_x = i32::MIN;
-    let mut max_y = i32::MIN;
-
-    for c in floor {
-        min_x = min(min_x, c.x);
-        max_x = max(max_x, c.x);
-        min_y = min(min_y, c.y);
-        max_y = max(max_y, c.y);
-    }
-
-    ((min_x, max_x), (min_y, max_y))
-}
-
-fn generation(floor: &HashSet<Coord>, limits: &CoordLimits) -> (HashSet<Coord>, CoordLimits) {
+fn generation(floor: &HashSet<Coord>) -> HashSet<Coord> {
     let mut result = HashSet::new();
-    let ((min_x, max_x), (min_y, max_y)) = limits;
 
-    let mut result_min_x = i32::MAX;
-    let mut result_min_y = i32::MAX;
-    let mut result_max_x = i32::MIN;
-    let mut result_max_y = i32::MIN;
-
-    for x in min_x - 2..max_x + 3 {
-        for y in min_y - 1..max_y + 2 {
-            let coord = Coord { x, y };
-            let old_value = floor.contains(&coord);
+    for coord in floor.iter().flat_map(|coord| neighborhood(coord)) {
+        let old_value = floor.contains(&coord);
             let count = count_neighbors(floor, &coord);
             let new_value;
             if old_value {
@@ -144,33 +117,27 @@ fn generation(floor: &HashSet<Coord>, limits: &CoordLimits) -> (HashSet<Coord>, 
                 new_value = count == 2;
             }
             if new_value {
-                result_min_x = min(result_min_x, x);
-                result_max_x = max(result_max_x, x);
-                result_min_y = min(result_min_y, y);
-                result_max_y = max(result_max_y, y);
                 result.insert(coord);
             }
-        }
     }
 
-    (
-        result,
-        ((result_min_x, result_max_x), (result_min_y, result_max_y)),
-    )
+    
+        result
 }
 
 fn count_neighbors(floor: &HashSet<Coord>, coord: &Coord) -> usize {
     let mut result = 0;
-    for c in neighbors(coord) {
-        if floor.contains(&c) {
+    for c in neighborhood(coord) {
+        if coord != &c && floor.contains(&c) {
             result += 1;
         }
     }
     result
 }
 
-fn neighbors(coord: &Coord) -> Vec<Coord> {
+fn neighborhood(coord: &Coord) -> Vec<Coord> {
     let mut result = vec![];
+    result.push(*coord);
     result.push(Direction::East.step(&coord));
     result.push(Direction::SouthEast.step(&coord));
     result.push(Direction::SouthWest.step(&coord));
@@ -232,18 +199,13 @@ mod tests {
 
         // println!("Foo: {:?}", floor);
         let count = floor.len();
-        let mut limit = limits(&floor);
         assert_eq!(10, count);
         for _day in 1..11 {
-            let parts = generation(&floor, &limit);
-            floor = parts.0;
-            limit = parts.1;
+            floor = generation(&floor);
             println!("Day {}: {}", _day, floor.len());
         }
         for _day in 11..101 {
-            let parts = generation(&floor, &limit);
-            floor = parts.0;
-            limit = parts.1;
+            floor = generation(&floor);
             // println!("Day {}: {}", _day, floor.len());
         }
         assert_eq!(2208, floor.len());
@@ -260,18 +222,13 @@ mod tests {
 
         // println!("Foo: {:?}", floor);
         let count = floor.len();
-        let mut limit = limits(&floor);
         assert_eq!(312, count);
         for _day in 1..11 {
-            let parts = generation(&floor, &limit);
-            floor = parts.0;
-            limit = parts.1;
+            floor = generation(&floor);
             // println!("Day {}: {}", _day, floor.len());
         }
         for _day in 11..101 {
-            let parts = generation(&floor, &limit);
-            floor = parts.0;
-            limit = parts.1;
+            floor = generation(&floor);
             // println!("Day {}: {}", _day, floor.len());
         }
         assert_eq!(3733, floor.len());
