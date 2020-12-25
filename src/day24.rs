@@ -109,20 +109,19 @@ fn generation(floor: &HashSet<Coord>) -> HashSet<Coord> {
 
     for coord in floor.iter().flat_map(|coord| neighborhood(coord)) {
         let old_value = floor.contains(&coord);
-            let count = count_neighbors(floor, &coord);
-            let new_value;
-            if old_value {
-                new_value = count == 1 || count == 2;
-            } else {
-                new_value = count == 2;
-            }
-            if new_value {
-                result.insert(coord);
-            }
+        let count = count_neighbors(floor, &coord);
+        let new_value;
+        if old_value {
+            new_value = count == 1 || count == 2;
+        } else {
+            new_value = count == 2;
+        }
+        if new_value {
+            result.insert(coord);
+        }
     }
 
-    
-        result
+    result
 }
 
 fn count_neighbors(floor: &HashSet<Coord>, coord: &Coord) -> usize {
